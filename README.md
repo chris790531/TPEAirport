@@ -1,0 +1,94 @@
+# TPEAirport
+
+抓取桃園機場「整點人數預估」（T1/T2），並輸出為 JSON / CSV，方便後續排程自動更新。
+
+## 安裝
+
+在專案根目錄：
+
+```powershell
+.\.venv\Scripts\python -m pip install -U pip
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python -m pip install -e .
+.\.venv\Scripts\python -m playwright install chromium
+```
+
+## 手動更新（立即抓一次）
+
+```powershell
+.\.venv\Scripts\python -m scripts.update_flightforecast
+```
+
+輸出：
+- `data/flightforecast_latest.json`
+- `data/flightforecast_latest.csv`
+
+## 推播到 LINE Bot
+
+先準備兩個環境變數（不要寫進程式碼/不要提交到 git）：
+- `LINE_CHANNEL_ACCESS_TOKEN`
+- `LINE_TARGET_ID`（userId / groupId / roomId）
+
+推播一次：
+
+```powershell
+.\.venv\Scripts\python -m scripts.push_line_forecast
+```
+
+你也可以把 `scripts/push_line_forecast.py` 這支改成排程每小時跑一次。
+
+## LINE Bot（使用者點選/輸入後回覆，不用推播）
+
+這種模式是「使用者傳訊息給 Bot → 你 reply 回去」，通常不會像 push 一樣大量吃掉計費訊息額度。
+
+建議使用 `.env` 管理密鑰：
+- 複製 `.\.env.example` 成 `.\.env`
+- 填入 `LINE_CHANNEL_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN`
+- 若要公開給任何人使用，建議準備條款與政策 URL（見 `docs/privacy.md`、`docs/terms.md`）
+
+啟動 webhook（本機）：
+
+```powershell
+.\.venv\Scripts\python -m scripts.run_line_webhook --host 0.0.0.0 --port 8000
+```
+
+LINE Developers 的 Webhook URL 設定為（需要可從外網連到你電腦；可用 ngrok/Cloudflare Tunnel）：  
+`https://你的網域或隧道網址/callback`
+
+可用指令：
+- `forecast`：回傳 T1/T2 高峰時段（top6）
+- `now`：回傳目前這個整點（台灣時間）T1/T2
+
+## 測試
+
+```powershell
+.\.venv\Scripts\python -m pytest
+```
+
+## 自動更新（Windows 工作排程器）
+
+用內建腳本建立「每小時」跑一次的排程：
+
+```powershell
+.\scripts\install_scheduled_task.ps1
+```
+
+注意事項：
+- **需要系統管理員權限**：請用「以系統管理員身分執行」開啟 PowerShell 再執行安裝腳本。
+- **需允許執行 PowerShell 腳本**：若遇到無法執行 `.ps1`，可在管理員 PowerShell 先設定（擇一）：
+  - `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+  - 或暫時單次允許：`powershell -ExecutionPolicy Bypass -File .\scripts\install_scheduled_task.ps1`
+- **避免重複觸發**：排程設定為「若上一個尚未跑完，忽略新的觸發（IgnoreNew）」以避免重疊執行。
+
+移除排程：
+
+```powershell
+.\scripts\uninstall_scheduled_task.ps1
+```
+
+若要除錯可用 headed 模式：
+
+```powershell
+.\.venv\Scripts\python -m scripts.update_flightforecast --headed
+```
+

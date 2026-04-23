@@ -1,0 +1,28 @@
+---
+description: Core Python standards (style, typing, logging, tests)
+alwaysApply: true
+---
+
+# 核心規範（Python）
+
+## 程式風格
+- 函式與變數使用 `snake_case`
+- 類別使用 `PascalCase`
+- 常數使用 `UPPER_CASE`
+- 縮排 4 spaces
+- 每行最多 88 字元
+- 遵循 PEP8
+
+## 文件與型別
+- public 函式必須加 type hints
+- 使用 Google style docstring
+- 模組與函式需有簡短描述
+
+## 錯誤處理與日誌
+- 使用明確例外類型，避免裸 try/except
+- 優先用 guard clause 提早失敗
+- 使用 `logging` 記錄，不用 `print()`
+
+## 測試與模組化
+- 函式保持單一職責
+- 主要邏輯需可測，重要路徑補單元測試
